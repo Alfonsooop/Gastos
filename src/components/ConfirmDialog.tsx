@@ -9,6 +9,8 @@ interface ConfirmDialogProps {
   cancelLabel?: string;
   /** Si es false, sólo se muestra el botón de cerrar (aviso sin acción). */
   canConfirm?: boolean;
+  /** Acción alternativa no destructiva (ej: "Sólo quitarlo de mi lista"). */
+  secondaryAction?: { label: string; onClick: () => void };
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -20,6 +22,7 @@ export function ConfirmDialog({
   confirmLabel = 'Eliminar',
   cancelLabel = 'Cancelar',
   canConfirm = true,
+  secondaryAction,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -41,6 +44,11 @@ export function ConfirmDialog({
           <Button variant="secondary" onClick={onCancel}>
             {canConfirm ? cancelLabel : 'Entendido'}
           </Button>
+          {secondaryAction && (
+            <Button variant="secondary" onClick={secondaryAction.onClick}>
+              {secondaryAction.label}
+            </Button>
+          )}
           {canConfirm && (
             <Button variant="danger" onClick={onConfirm} autoFocus>
               {confirmLabel}

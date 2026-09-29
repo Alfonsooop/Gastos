@@ -10,16 +10,22 @@ import { calculateTotalAssigned } from '../lib/distribution';
 import { formatMoney } from '../lib/money';
 import { getExpenseEmoji } from '../lib/expenseEmoji';
 import { NotFoundPage } from './NotFoundPage';
+import { GroupGate } from '../components/GroupGate';
+import type { Group } from '../types';
 
 const dateFormat = new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 
 export function ExpenseDetailPage({ groupId, expenseId }: { groupId: string; expenseId: string }) {
-  const { getGroup, updateGroup } = useGroups();
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const group = getGroup(groupId);
-  const expense = group?.expenses.find((e) => e.id === expenseId);
+  return <GroupGate groupId={groupId}>{(group) => <ExpenseDetail group={group} expenseId={expenseId} />}</GroupGate>;
+}
 
-  if (!group) return <NotFoundPage message="No encontramos este grupo." />;
+function ExpenseDetail({ group, expenseId }: { group: Group; expenseId: string }) {
+  const { updateGroup } = useGroups();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const expense = group.expenses.find((e) => e.id === expenseId);
+
+  if (deleting) return null;
   if (!expense) return <NotFoundPage message="No encontramos este gasto." />;
 
   const nameOf = new Map(group.members.map((m) => [m.id, m.name]));
@@ -97,9 +103,12 @@ export function ExpenseDetailPage({ groupId, expenseId }: { groupId: string; exp
         open={confirmDelete}
         title="¿Seguro que querés eliminar este gasto?"
         onCancel={() => setConfirmDelete(false)}
-        onConfirm={() => {
-          updateGroup(group.id, (g) => deleteExpense(g, expense.id));
-          navigate(paths.group(group.id, 'gastos'), { replace: true });
+        onConfirm={async () => {
+          setConfirmDelete(false);
+          setDeleting(true);
+          if (await updateGroup(group.id, (g) => deleteExpense(g, expense.id)))
+            navigate(paths.group(group.id, 'gastos'), { replace: true });
+          else setDeleting(false);
         }}
       >
         Se va a borrar <strong>{expense.description}</strong> ({formatMoney(expense.totalAmount)}) y se recalculan los balances

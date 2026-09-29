@@ -9,10 +9,11 @@ import { SettlementList, settlementsToText } from '../components/SettlementList'
 import { ExpenseList } from '../components/ExpenseList';
 import { MembersPanel } from '../components/MembersPanel';
 import { useGroups } from '../state/GroupsContext';
+import { GroupGate } from '../components/GroupGate';
+import { ShareButton } from '../components/ShareButton';
 import { paths, type GroupTab } from '../state/router';
 import { calculateBalances, calculateGroupTotal, calculateSettlements } from '../lib/balances';
 import { formatMoney } from '../lib/money';
-import { NotFoundPage } from './NotFoundPage';
 
 const TABS: { id: GroupTab; label: string }[] = [
   { id: 'resumen', label: 'Resumen' },
@@ -22,21 +23,20 @@ const TABS: { id: GroupTab; label: string }[] = [
 ];
 
 export function GroupPage({ groupId, tab }: { groupId: string; tab: GroupTab }) {
-  const { getGroup } = useGroups();
-  const group = getGroup(groupId);
-  if (!group) return <NotFoundPage message="No encontramos este grupo." />;
-  return <GroupView group={group} tab={tab} />;
+  return <GroupGate groupId={groupId}>{(group) => <GroupView group={group} tab={tab} />}</GroupGate>;
 }
 
 function GroupView({ group, tab }: { group: Group; tab: GroupTab }) {
   const balances = useMemo(() => calculateBalances(group.members, group.expenses), [group]);
   const settlements = useMemo(() => calculateSettlements(balances), [balances]);
   const total = calculateGroupTotal(group.expenses);
+  const { mode } = useGroups();
 
   return (
     <Page
       back={paths.groups()}
       title={group.name}
+      actions={mode === 'cloud' && <ShareButton group={group} />}
       footer={
         group.members.length > 0 && (
           <LinkButton href={paths.newExpense(group.id)} size="lg" className="w-full shadow-lg shadow-ink/15">

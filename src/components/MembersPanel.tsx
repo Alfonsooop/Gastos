@@ -20,13 +20,14 @@ export function MembersPanel({ group, balances }: { group: Group; balances: Memb
   const usage = toRemove ? getMemberUsage(group, toRemove.id) : null;
   const blocked = Boolean(usage && usage.paidCount > 0);
 
-  const onAdd = (e: FormEvent) => {
+  const onAdd = async (e: FormEvent) => {
     e.preventDefault();
     const problem = validateMemberName(name, group.members);
     setError(problem);
     if (problem) return;
-    updateGroup(group.id, (g) => addMember(g, name));
+    const newName = name;
     setName('');
+    if (!(await updateGroup(group.id, (g) => addMember(g, newName)))) setName(newName);
   };
 
   return (

@@ -9,7 +9,7 @@ import { createGroup } from '../lib/groupOperations';
 import { hasErrors, validateGroupDraft } from '../lib/validation';
 
 export function NewGroupPage() {
-  const { saveGroup } = useGroups();
+  const { createGroup: saveGroup } = useGroups();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [memberNames, setMemberNames] = useState<string[]>(['', '']);
@@ -26,13 +26,12 @@ export function NewGroupPage() {
     focusMember(memberNames.length);
   };
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
     if (hasErrors(errors)) return;
     const group = createGroup({ name, description, memberNames });
-    saveGroup(group);
-    navigate(paths.group(group.id), { replace: true });
+    if (await saveGroup(group)) navigate(paths.group(group.id), { replace: true });
   };
 
   return (

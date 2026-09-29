@@ -18,7 +18,8 @@ En un grupo, distintas personas pagan distintas cosas (el bar, el cine, el taxi)
 - **Indicador de asignación** siempre visible (`Asignado: $60.000,00 / $60.000,00 ✓`) con avisos de faltantes o excesos. No se puede guardar hasta que cuadre.
 - **Resumen**: pagó / le corresponde / balance por persona, con colores.
 - **Liquidación**: las transferencias para dejar a todos en $0, con botón para copiar el texto y mandarlo al grupo.
-- **Persistencia** en `localStorage`: todo sigue ahí al cerrar y volver a abrir el navegador.
+- **Grupos compartidos en la nube** (Firebase Firestore): tocás **Invitar**, mandás el link y todos ven y cargan gastos en el mismo grupo, sincronizado en vivo. Las ediciones usan transacciones, así dos personas guardando a la vez no se pisan.
+- **Sin configurar Firebase** la app funciona igual, guardando todo en el navegador (`localStorage`). Al activar la nube, los grupos locales se suben solos.
 - **Grupo de ejemplo** cargable desde la Home para probar la app en un clic.
 - Diseño mobile-first, pensado para usar desde el teléfono en plena juntada.
 
@@ -28,6 +29,7 @@ En un grupo, distintas personas pagan distintas cosas (el bar, el cine, el taxi)
 - [Vite](https://vite.dev)
 - [Tailwind CSS v4](https://tailwindcss.com)
 - [Vitest](https://vitest.dev) para los tests
+- [Firebase Firestore](https://firebase.google.com/docs/firestore) (opcional) como base de datos compartida, plan gratuito
 - Sin backend y sin dependencias de runtime extra (router propio basado en `#hash`).
 
 ## Estructura del proyecto
@@ -44,8 +46,13 @@ src/
 │   ├── expenseEmoji.ts       # 🍻 🎬 🚕 según la descripción
 │   ├── sampleData.ts         # Grupo de ejemplo
 │   └── *.test.ts
+├── firebase/config.ts        # Config de Firebase desde variables VITE_FIREBASE_*
 ├── storage/
-│   └── groupsStorage.ts      # Lectura/escritura en localStorage
+│   ├── GroupStore.ts         # Interfaz común: watch / create / update / remove
+│   ├── localGroupStore.ts    # Implementación con localStorage
+│   ├── firestoreGroupStore.ts# Implementación con Firestore (tiempo real + transacciones)
+│   ├── createGroupStore.ts   # Elige Firestore si está configurado, si no localStorage
+│   └── groupsStorage.ts      # localStorage: grupos locales y lista de "mis grupos"
 ├── state/
 │   ├── GroupsContext.tsx     # Estado global de grupos (persistido)
 │   ├── useExpenseForm.ts     # Estado del formulario de gasto
@@ -84,6 +91,31 @@ Otros comandos:
 npm run build      # typecheck + build de producción en dist/
 npm run preview    # sirve el build
 ```
+
+## Grupos compartidos con Firebase (gratis)
+
+Sin esta configuración la app guarda los grupos sólo en el navegador de cada persona. Para compartirlos:
+
+1. Entrá a https://console.firebase.google.com y creá un proyecto (podés desactivar Google Analytics).
+2. En **Compilación → Firestore Database** tocá **Crear base de datos**, elegí una ubicación (ej. `southamerica-east1`) y modo **producción**.
+3. En la pestaña **Reglas**, pegá el contenido de [`firestore.rules`](firestore.rules) y tocá **Publicar**.
+4. En **Configuración del proyecto → Tus apps**, agregá una app **Web** (`</>`). Firebase te muestra un objeto `firebaseConfig`.
+5. Copiá `.env.example` como `.env` y completá los valores con ese `firebaseConfig`. Estos datos **no son secretos** (quedan visibles en cualquier app web con Firebase); la seguridad la dan las reglas. Por eso `.env` se sube al repo y GitHub Pages lo usa al compilar.
+
+**Cómo funciona el acceso:** cada grupo es un documento de Firestore identificado por un UUID imposible de adivinar. Las reglas permiten leer y editar un grupo a quien conoce su id (es decir, a quien tiene el link), pero no permiten listar grupos, así que nadie puede ver los grupos de otros. Es el mismo modelo que "cualquiera con el link" de Google Docs. "Mis grupos" es la lista de grupos que cada navegador creó o abrió.
+
+**Probar localmente con el emulador** (requiere Java):
+
+```bash
+npx firebase-tools emulators:start --only firestore --project demo-salda
+# en otra terminal, con VITE_FIREBASE_PROJECT_ID=demo-salda y
+# VITE_FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 en .env.local:
+npm run dev
+```
+
+## Publicación en GitHub Pages
+
+El workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) corre los tests, compila y publica en `https://<usuario>.github.io/Gastos/` en cada push a `main`. Hay que activarlo una vez en **Settings → Pages → Source: GitHub Actions**.
 
 ## Tests
 

@@ -6,12 +6,11 @@ import { navigate, paths } from '../state/router';
 import { createSampleGroup } from '../lib/sampleData';
 
 export function HomePage() {
-  const { groups, saveGroup } = useGroups();
+  const { myGroups: groups, myGroupsLoading, createGroup } = useGroups();
 
-  const loadSample = () => {
+  const loadSample = async () => {
     const group = createSampleGroup();
-    saveGroup(group);
-    navigate(paths.group(group.id));
+    if (await createGroup(group)) navigate(paths.group(group.id));
   };
 
   return (
@@ -37,7 +36,9 @@ export function HomePage() {
       </section>
 
       <section className="mt-12">
-        {groups.length === 0 ? (
+        {groups.length === 0 && myGroupsLoading ? (
+          <p className="text-center text-sm text-muted">Cargando tus grupos…</p>
+        ) : groups.length === 0 ? (
           <div className="rounded-3xl border-2 border-dashed border-line px-6 py-10 text-center">
             <span className="text-4xl" aria-hidden>
               🧾

@@ -9,7 +9,7 @@ import { useGroups } from '../state/GroupsContext';
 import { paths } from '../state/router';
 
 export function GroupsPage() {
-  const { groups, deleteGroup } = useGroups();
+  const { myGroups: groups, myGroupsLoading, deleteGroup, forgetGroup, mode } = useGroups();
   const [toDelete, setToDelete] = useState<Group | null>(null);
 
   return (
@@ -24,7 +24,9 @@ export function GroupsPage() {
         )
       }
     >
-      {groups.length === 0 ? (
+      {groups.length === 0 && myGroupsLoading ? (
+        <p className="py-10 text-center text-sm text-muted">Cargando tus grupos…</p>
+      ) : groups.length === 0 ? (
         <EmptyState
           icon="🧾"
           title="No tenés grupos todavía."
@@ -59,14 +61,34 @@ export function GroupsPage() {
       <ConfirmDialog
         open={toDelete !== null}
         title="¿Eliminar este grupo?"
-        confirmLabel="Eliminar grupo"
+        confirmLabel={mode === 'cloud' ? 'Eliminar para todos' : 'Eliminar grupo'}
+        secondaryAction={
+          mode === 'cloud'
+            ? {
+                label: 'Sólo quitarlo de mi lista',
+                onClick: () => {
+                  if (toDelete) forgetGroup(toDelete.id);
+                  setToDelete(null);
+                },
+              }
+            : undefined
+        }
         onCancel={() => setToDelete(null)}
         onConfirm={() => {
           if (toDelete) deleteGroup(toDelete.id);
           setToDelete(null);
         }}
       >
-        Se van a borrar <strong>{toDelete?.name}</strong>, sus integrantes y todos sus gastos. No se puede deshacer.
+        {mode === 'cloud' ? (
+          <>
+            Si lo eliminás para todos, se borran <strong>{toDelete?.name}</strong> y todos sus gastos para cada persona que tenga
+            el link. No se puede deshacer. También podés sólo quitarlo de tu lista.
+          </>
+        ) : (
+          <>
+            Se van a borrar <strong>{toDelete?.name}</strong>, sus integrantes y todos sus gastos. No se puede deshacer.
+          </>
+        )}
       </ConfirmDialog>
     </Page>
   );

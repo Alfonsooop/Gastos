@@ -7,6 +7,8 @@ export default defineConfig({
   // Rutas relativas: funciona en GitHub Pages (usuario.github.io/Gastos/) y en cualquier hosting.
   base: './',
   plugins: [react(), tailwindcss()],
+  // Firebase va en un chunk aparte que sólo se descarga si está configurado.
+  build: { chunkSizeWarningLimit: 600 },
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
