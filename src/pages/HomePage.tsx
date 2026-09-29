@@ -6,7 +6,7 @@ import { navigate, paths } from '../state/router';
 import { createSampleGroup } from '../lib/sampleData';
 
 export function HomePage() {
-  const { myGroups: groups, myGroupsLoading, createGroup } = useGroups();
+  const { myGroups: groups, myGroupsLoading, createGroup, mode } = useGroups();
 
   const loadSample = async () => {
     const group = createSampleGroup();
@@ -32,6 +32,11 @@ export function HomePage() {
           <LinkButton href={paths.groups()} size="lg" variant="secondary">
             Mis grupos
           </LinkButton>
+          {mode === 'cloud' && (
+            <LinkButton href={paths.join()} size="lg" variant="accent" className="col-span-2">
+              🤝 Unirme con un código
+            </LinkButton>
+          )}
         </div>
       </section>
 
@@ -49,6 +54,11 @@ export function HomePage() {
               <LinkButton href={paths.newGroup()} variant="accent">
                 + Crear mi primer grupo
               </LinkButton>
+              {mode === 'cloud' && (
+                <LinkButton href={paths.join()} variant="secondary">
+                  ¿Te invitaron? Unite con un código
+                </LinkButton>
+              )}
               <Button variant="ghost" size="sm" onClick={loadSample}>
                 o probá con un grupo de ejemplo
               </Button>

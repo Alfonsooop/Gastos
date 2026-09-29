@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useEffect, type ReactNode } from 'react';
 import { Button } from './Button';
 
@@ -34,7 +35,7 @@ export function ConfirmDialog({
   }, [open, onCancel]);
 
   if (!open) return null;
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal aria-label={title}>
       <div className="absolute inset-0 bg-ink/40 backdrop-blur-[2px]" onClick={onCancel} />
       <div className="animate-rise safe-bottom relative w-full max-w-md rounded-t-3xl bg-card px-5 pt-6 shadow-xl sm:mx-4 sm:rounded-3xl sm:pb-5">
@@ -56,6 +57,7 @@ export function ConfirmDialog({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

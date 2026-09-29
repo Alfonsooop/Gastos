@@ -32,9 +32,16 @@ export function GroupsPage() {
           title="No tenés grupos todavía."
           text="Creá tu primer grupo para empezar a dividir gastos."
           action={
-            <LinkButton href={paths.newGroup()} variant="accent">
-              + Crear mi primer grupo
-            </LinkButton>
+            <div className="flex flex-col items-center gap-2">
+              <LinkButton href={paths.newGroup()} variant="accent">
+                + Crear mi primer grupo
+              </LinkButton>
+              {mode === 'cloud' && (
+                <LinkButton href={paths.join()} variant="secondary">
+                  ¿Te invitaron? Unite con un código
+                </LinkButton>
+              )}
+            </div>
           }
         />
       ) : (

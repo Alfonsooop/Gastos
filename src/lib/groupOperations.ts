@@ -24,8 +24,8 @@ export function createGroup(draft: GroupDraft): Group {
   };
 }
 
-export function addMember(group: Group, name: string): Group {
-  const member: Member = { id: createId(), name: name.trim() };
+export function addMember(group: Group, name: string, id: string = createId()): Group {
+  const member: Member = { id, name: name.trim() };
   return { ...group, members: [...group.members, member] };
 }
 

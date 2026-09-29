@@ -18,7 +18,8 @@ En un grupo, distintas personas pagan distintas cosas (el bar, el cine, el taxi)
 - **Indicador de asignación** siempre visible (`Asignado: $60.000,00 / $60.000,00 ✓`) con avisos de faltantes o excesos. No se puede guardar hasta que cuadre.
 - **Resumen**: pagó / le corresponde / balance por persona, con colores.
 - **Liquidación**: las transferencias para dejar a todos en $0, con botón para copiar el texto y mandarlo al grupo.
-- **Grupos compartidos en la nube** (Firebase Firestore): tocás **Invitar**, mandás el link y todos ven y cargan gastos en el mismo grupo, sincronizado en vivo. Las ediciones usan transacciones, así dos personas guardando a la vez no se pisan.
+- **Grupos compartidos en la nube** (Firebase Firestore): tocás **Invitar** y compartís el **código del grupo** (ej. `K7P2QX`) o el link. Tus amigos entran con **Unirme con un código** y todos ven y cargan gastos en el mismo grupo, sincronizado en vivo.
+- **¿Quién sos?**: al entrar a un grupo compartido cada uno elige su nombre (o se agrega) y ve arriba de todo cuánto tiene que transferir y a quién. Las ediciones usan transacciones, así dos personas guardando a la vez no se pisan.
 - **Sin configurar Firebase** la app funciona igual, guardando todo en el navegador (`localStorage`). Al activar la nube, los grupos locales se suben solos.
 - **Grupo de ejemplo** cargable desde la Home para probar la app en un clic.
 - Diseño mobile-first, pensado para usar desde el teléfono en plena juntada.
@@ -102,7 +103,7 @@ Sin esta configuración la app guarda los grupos sólo en el navegador de cada p
 4. En **Configuración del proyecto → Tus apps**, agregá una app **Web** (`</>`). Firebase te muestra un objeto `firebaseConfig`.
 5. Copiá `.env.example` como `.env` y completá los valores con ese `firebaseConfig`. Estos datos **no son secretos** (quedan visibles en cualquier app web con Firebase); la seguridad la dan las reglas. Por eso `.env` se sube al repo y GitHub Pages lo usa al compilar.
 
-**Cómo funciona el acceso:** cada grupo es un documento de Firestore identificado por un UUID imposible de adivinar. Las reglas permiten leer y editar un grupo a quien conoce su id (es decir, a quien tiene el link), pero no permiten listar grupos, así que nadie puede ver los grupos de otros. Es el mismo modelo que "cualquiera con el link" de Google Docs. "Mis grupos" es la lista de grupos que cada navegador creó o abrió.
+**Cómo funciona el acceso:** cada grupo es un documento de Firestore identificado por un UUID imposible de adivinar, y tiene además un código corto de 6 caracteres (colección `codes`) para unirse escribiéndolo. Las reglas permiten leer y editar un grupo a quien conoce su id (es decir, a quien tiene el link), pero no permiten listar grupos, así que nadie puede ver los grupos de otros. Es el mismo modelo que "cualquiera con el link" de Google Docs. "Mis grupos" es la lista de grupos que cada navegador creó o abrió.
 
 **Probar localmente con el emulador** (requiere Java):
 

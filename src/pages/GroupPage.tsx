@@ -10,7 +10,11 @@ import { ExpenseList } from '../components/ExpenseList';
 import { MembersPanel } from '../components/MembersPanel';
 import { useGroups } from '../state/GroupsContext';
 import { GroupGate } from '../components/GroupGate';
-import { ShareButton } from '../components/ShareButton';
+import { InviteButton } from '../components/InviteButton';
+import { WhoAreYouDialog } from '../components/WhoAreYouDialog';
+import { PersonalCard } from '../components/PersonalCard';
+import { useMyMemberId } from '../state/useMyMemberId';
+import { getPersonalSummary } from '../lib/personalSummary';
 import { paths, type GroupTab } from '../state/router';
 import { calculateBalances, calculateGroupTotal, calculateSettlements } from '../lib/balances';
 import { formatMoney } from '../lib/money';
@@ -31,12 +35,23 @@ function GroupView({ group, tab }: { group: Group; tab: GroupTab }) {
   const settlements = useMemo(() => calculateSettlements(balances), [balances]);
   const total = calculateGroupTotal(group.expenses);
   const { mode } = useGroups();
+  const shared = mode === 'cloud';
+  const identity = useMyMemberId(group);
+  const [choosingIdentity, setChoosingIdentity] = useState(false);
+  const me = group.members.find((m) => m.id === identity.memberId);
+  // En grupos compartidos, preguntamos una vez "¿quién sos?" al entrar.
+  const showWhoAreYou = shared && (choosingIdentity || !identity.asked);
+
+  const chooseIdentity = (memberId: string) => {
+    identity.setMemberId(memberId);
+    setChoosingIdentity(false);
+  };
 
   return (
     <Page
       back={paths.groups()}
       title={group.name}
-      actions={mode === 'cloud' && <ShareButton group={group} />}
+      actions={shared && <InviteButton group={group} />}
       footer={
         group.members.length > 0 && (
           <LinkButton href={paths.newExpense(group.id)} size="lg" className="w-full shadow-lg shadow-ink/15">
@@ -73,6 +88,37 @@ function GroupView({ group, tab }: { group: Group; tab: GroupTab }) {
       <div className="mt-4 animate-rise" key={tab}>
         {tab === 'resumen' && (
           <div className="space-y-8">
+            {shared && group.expenses.length > 0 && (
+              me ? (
+                <PersonalCard
+                  me={me}
+                  members={group.members}
+                  summary={getPersonalSummary(me.id, balances, settlements)}
+                  onChange={() => setChoosingIdentity(true)}
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setChoosingIdentity(true)}
+                  className="w-full rounded-3xl border-2 border-dashed border-line px-4 py-4 text-left transition hover:border-ink/30"
+                >
+                  <p className="font-semibold">¿Quién sos en este grupo?</p>
+                  <p className="text-sm text-muted">Elegí tu nombre y te mostramos cuánto tenés que pagar y a quién.</p>
+                </button>
+              )
+            )}
+            {shared && group.expenses.length === 0 && (
+              <div className="flex items-center gap-3 rounded-3xl bg-lime-soft px-4 py-4 ring-1 ring-lime">
+                <span className="text-3xl" aria-hidden>
+                  👋
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold">Sumá a tus amigos</p>
+                  <p className="text-sm text-ink-soft">Compartiles el código y todos pueden cargar gastos.</p>
+                </div>
+                <InviteButton group={group} />
+              </div>
+            )}
             <section>
               <SectionTitle>Resumen</SectionTitle>
               {group.expenses.length === 0 ? (
@@ -83,7 +129,7 @@ function GroupView({ group, tab }: { group: Group; tab: GroupTab }) {
                 />
               ) : (
                 <>
-                  <BalanceList members={group.members} balances={balances} />
+                  <BalanceList members={group.members} balances={balances} meId={me?.id} />
                   <p className="mt-2 px-1 text-xs text-muted">
                     Balance = lo que pagó − lo que le corresponde. Positivo: recibe dinero. Negativo: tiene que pagar.
                   </p>
@@ -104,6 +150,17 @@ function GroupView({ group, tab }: { group: Group; tab: GroupTab }) {
         {tab === 'integrantes' && <MembersPanel group={group} balances={balances} />}
         {tab === 'liquidacion' && <SettlementSection group={group} settlements={settlements} showShare />}
       </div>
+
+      {showWhoAreYou && (
+        <WhoAreYouDialog
+          group={group}
+          onSelect={chooseIdentity}
+          onSkip={() => {
+            if (!identity.asked) identity.setMemberId('');
+            setChoosingIdentity(false);
+          }}
+        />
+      )}
     </Page>
   );
 }

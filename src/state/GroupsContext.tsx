@@ -25,6 +25,10 @@ interface GroupsContextValue {
   updateGroup: (id: string, update: (group: Group) => Group) => Promise<boolean>;
   /** Lo borra para todos. */
   deleteGroup: (id: string) => Promise<boolean>;
+  /** Código para invitar (lo crea si hace falta). null si no se pudo. */
+  ensureCode: (groupId: string) => Promise<string | null>;
+  /** Id del grupo con ese código, null si no existe. Lanza error si no hay conexión. */
+  findGroupIdByCode: (code: string) => Promise<string | null>;
 }
 
 const GroupsContext = createContext<GroupsContextValue | null>(null);
@@ -150,6 +154,27 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
     [store, run, forgetGroup],
   );
 
+  const ensureCode = useCallback(
+    async (groupId: string) => {
+      if (!store) return null;
+      try {
+        return await store.ensureCode(groupId);
+      } catch (e) {
+        setError(errorMessage(e));
+        return null;
+      }
+    },
+    [store],
+  );
+
+  const findGroupIdByCode = useCallback(
+    async (code: string) => {
+      const s = store ?? (await getGroupStore());
+      return s.findGroupIdByCode(code);
+    },
+    [store],
+  );
+
   const myGroups = useMemo(
     () => myGroupIds.map((id) => docs[id]).filter((g): g is Group => Boolean(g)),
     [myGroupIds, docs],
@@ -169,8 +194,24 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
       createGroup,
       updateGroup,
       deleteGroup,
+      ensureCode,
+      findGroupIdByCode,
     }),
-    [store, myGroups, myGroupsLoading, docs, myGroupIds, retain, rememberGroup, forgetGroup, createGroup, updateGroup, deleteGroup],
+    [
+      store,
+      myGroups,
+      myGroupsLoading,
+      docs,
+      myGroupIds,
+      retain,
+      rememberGroup,
+      forgetGroup,
+      createGroup,
+      updateGroup,
+      deleteGroup,
+      ensureCode,
+      findGroupIdByCode,
+    ],
   );
 
   return (

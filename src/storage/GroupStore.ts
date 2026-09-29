@@ -15,4 +15,8 @@ export interface GroupStore {
   /** Aplica una transformación pura sobre la versión más reciente del grupo. */
   update(id: string, transform: (group: Group) => Group): Promise<void>;
   remove(id: string): Promise<void>;
+  /** Devuelve el código del grupo, creándolo si todavía no tiene. */
+  ensureCode(groupId: string): Promise<string>;
+  /** Busca a qué grupo corresponde un código. null si no existe. */
+  findGroupIdByCode(code: string): Promise<string | null>;
 }
