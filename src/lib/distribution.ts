@@ -80,7 +80,7 @@ export function calculateExpenseDistribution(
   let autoIndex = 0;
   const result: ExpenseParticipant[] = participants.map((p) =>
     p.isCustom
-      ? { memberId: p.memberId, amount: p.amount, isCustom: true }
+      ? { ...p, isCustom: true }
       : { memberId: p.memberId, amount: autoShares[autoIndex++] ?? 0, isCustom: false },
   );
 

@@ -15,6 +15,7 @@ En un grupo, distintas personas pagan distintas cosas (el bar, el cine, el taxi)
 - **Gastos**: descripción, monto, quién pagó y quiénes participaron. Se pueden ver, editar y eliminar.
 - **División automática en partes iguales** apenas elegís participantes.
 - **Montos personalizados tipo planilla**: tocás un monto, lo escribís, queda fijado (🔒) y el resto se reparte solo. Tocando 🔒 vuelve a automático. Botón **Restablecer división equitativa**.
+- **Detalle opcional por persona**: con la flecha ▸ se anota qué consumió cada uno (ej. Hamburguesa $3.000 + Cerveza $2.000); su parte pasa a ser la suma y el resto se reparte solo. En el detalle del gasto se despliega con la misma flecha.
 - **Indicador de asignación** siempre visible (`Asignado: $60.000,00 / $60.000,00 ✓`) con avisos de faltantes o excesos. No se puede guardar hasta que cuadre.
 - **Resumen**: pagó / le corresponde / balance por persona, con colores.
 - **Liquidación**: las transferencias para dejar a todos en $0, con botón para copiar el texto y mandarlo al grupo.

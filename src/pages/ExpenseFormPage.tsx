@@ -132,6 +132,7 @@ function ExpenseForm({ group, expense }: { group: Group; expense?: Expense }) {
             onToggle={form.toggleParticipant}
             onAmountChange={form.setCustomAmount}
             onUnlock={form.unlockAmount}
+            onItemsChange={form.setItems}
           />
           <FieldError>{showError('participants')}</FieldError>
 
