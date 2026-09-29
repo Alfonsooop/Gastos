@@ -4,9 +4,14 @@ import { GroupCard } from '../components/GroupCard';
 import { useGroups } from '../state/GroupsContext';
 import { navigate, paths } from '../state/router';
 import { createSampleGroup } from '../lib/sampleData';
+import { isRunningAsInstalledApp } from '../lib/platform';
+import { InstallBanner } from '../components/InstallBanner';
+import { InstallGuide } from '../components/InstallGuide';
+import { useState } from 'react';
 
 export function HomePage() {
   const { myGroups: groups, myGroupsLoading, createGroup, mode } = useGroups();
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
 
   const loadSample = async () => {
     const group = createSampleGroup();
@@ -39,6 +44,10 @@ export function HomePage() {
           )}
         </div>
       </section>
+
+      <div className="mt-8">
+        <InstallBanner />
+      </div>
 
       <section className="mt-12">
         {groups.length === 0 && myGroupsLoading ? (
@@ -82,6 +91,17 @@ export function HomePage() {
           </>
         )}
       </section>
+
+      {!isRunningAsInstalledApp() && (
+        <button
+          type="button"
+          onClick={() => setShowInstallGuide(true)}
+          className="mx-auto mt-auto pt-12 text-sm font-semibold text-muted underline-offset-4 hover:text-ink hover:underline"
+        >
+          📲 Cómo agregar Salda a tu celular
+        </button>
+      )}
+      {showInstallGuide && <InstallGuide onClose={() => setShowInstallGuide(false)} />}
     </div>
   );
 }
