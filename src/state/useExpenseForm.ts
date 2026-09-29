@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import type { Cents, Expense, ExpenseParticipant, Member } from '../types';
+import type { Cents, Expense, ExpenseItem, ExpenseParticipant, Member } from '../types';
+import { cleanItems, withItems } from '../lib/expenseItems';
 import { calculateExpenseDistribution } from '../lib/distribution';
 import { validateExpense, type ExpenseField, type FieldErrors } from '../lib/validation';
 import type { ExpenseDraft } from '../lib/groupOperations';
@@ -62,17 +63,21 @@ export function useExpenseForm(members: Member[], expense?: Expense) {
       prev.map((p) => (p.memberId === memberId ? { ...p, amount: amount ?? 0, isCustom: true } : p)),
     );
 
-  /** Vuelve un monto personalizado a automático. */
+  /** Vuelve un monto personalizado a automático (y descarta su detalle, si tenía). */
   const unlockAmount = (memberId: string) =>
-    setSelection((prev) => prev.map((p) => (p.memberId === memberId ? { ...p, isCustom: false } : p)));
+    setSelection((prev) => prev.map((p) => (p.memberId === memberId ? withItems(p, []) : p)));
 
-  const resetEqualSplit = () => setSelection((prev) => prev.map((p) => ({ ...p, isCustom: false })));
+  /** Detalle opcional de lo que consumió una persona: su monto pasa a ser la suma. */
+  const setItems = (memberId: string, items: ExpenseItem[]) =>
+    setSelection((prev) => prev.map((p) => (p.memberId === memberId ? withItems(p, items) : p)));
+
+  const resetEqualSplit = () => setSelection((prev) => prev.map((p) => withItems(p, [])));
 
   const toDraft = (): ExpenseDraft => ({
     description: description.trim(),
     totalAmount: totalAmount ?? 0,
     paidBy,
-    participants: distribution.participants,
+    participants: distribution.participants.map(cleanItems),
   });
 
   return {
@@ -89,6 +94,7 @@ export function useExpenseForm(members: Member[], expense?: Expense) {
     selectAll,
     setCustomAmount,
     unlockAmount,
+    setItems,
     resetEqualSplit,
     toDraft,
   };

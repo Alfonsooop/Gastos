@@ -11,7 +11,7 @@ import { formatMoney } from '../lib/money';
 import { getExpenseEmoji } from '../lib/expenseEmoji';
 import { NotFoundPage } from './NotFoundPage';
 import { GroupGate } from '../components/GroupGate';
-import type { Group } from '../types';
+import type { ExpenseParticipant, Group } from '../types';
 
 const dateFormat = new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 
@@ -61,21 +61,9 @@ function ExpenseDetail({ group, expenseId }: { group: Group; expenseId: string }
         <h3 className="mt-8 mb-3 font-display text-xl font-bold">Distribución</h3>
         <div className="overflow-hidden rounded-3xl bg-card ring-1 ring-line">
           <ul className="divide-y divide-line">
-            {expense.participants.map((p) => {
-              const name = nameOf.get(p.memberId) ?? '—';
-              return (
-                <li key={p.memberId} className="flex items-center gap-3 px-4 py-3">
-                  <Avatar name={name} size="sm" />
-                  <span className="min-w-0 flex-1 truncate font-semibold">{name}</span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${p.isCustom ? 'bg-lime-soft text-ink' : 'bg-ink/5 text-muted'}`}
-                  >
-                    {p.isCustom ? '🔒 personalizado' : 'automático'}
-                  </span>
-                  <span className="tabular w-28 text-right font-semibold">{formatMoney(p.amount)}</span>
-                </li>
-              );
-            })}
+            {expense.participants.map((p) => (
+              <ParticipantRow key={p.memberId} name={nameOf.get(p.memberId) ?? '—'} participant={p} />
+            ))}
           </ul>
           <div className="flex items-center justify-between bg-plus-soft px-4 py-3 font-semibold text-plus">
             <span>Total asignado</span>
@@ -115,5 +103,61 @@ function ExpenseDetail({ group, expenseId }: { group: Group; expenseId: string }
         del grupo.
       </ConfirmDialog>
     </Page>
+  );
+}
+
+/** Fila de la distribución. Si la persona tiene detalle, la flecha lo despliega. */
+function ParticipantRow({ name, participant: p }: { name: string; participant: ExpenseParticipant }) {
+  const [open, setOpen] = useState(false);
+  const items = p.items ?? [];
+  const hasItems = items.length > 0;
+
+  const summary = (
+    <>
+      <Avatar name={name} size="sm" />
+      <span className="min-w-0 flex-1 text-left">
+        <span className="block truncate font-semibold">{name}</span>
+        {hasItems && (
+          <span className="block text-xs text-muted">
+            {items.length} {items.length === 1 ? 'ítem' : 'ítems'}
+          </span>
+        )}
+      </span>
+      <span
+        className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${hasItems ? 'hidden sm:inline' : ''} ${p.isCustom ? 'bg-lime-soft text-ink' : 'bg-ink/5 text-muted'}`}
+      >
+        {hasItems ? '🧾 detallado' : p.isCustom ? '🔒 personalizado' : 'automático'}
+      </span>
+      <span className="tabular w-24 text-right font-semibold sm:w-28">{formatMoney(p.amount)}</span>
+    </>
+  );
+
+  if (!hasItems) return <li className="flex items-center gap-3 px-4 py-3">{summary}</li>;
+
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-label={`${open ? 'Ocultar' : 'Ver'} lo que consumió ${name}`}
+        className="flex w-full items-center gap-3 py-3 pr-4 pl-2 hover:bg-paper/60"
+      >
+        <svg viewBox="0 0 20 20" className={`size-4 shrink-0 text-muted transition-transform ${open ? 'rotate-90' : ''}`} fill="currentColor" aria-hidden>
+          <path d="M7 4l7 6-7 6z" />
+        </svg>
+        {summary}
+      </button>
+      {open && (
+        <ul className="mx-4 mb-3 space-y-1 rounded-2xl bg-paper px-4 py-2.5 text-sm">
+          {items.map((item) => (
+            <li key={item.id} className="flex justify-between gap-3">
+              <span className="text-ink-soft">{item.description || 'Sin descripción'}</span>
+              <span className="tabular font-medium">{formatMoney(item.amount)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </li>
   );
 }

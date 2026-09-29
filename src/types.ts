@@ -6,12 +6,24 @@ export interface Member {
   name: string;
 }
 
+/** Un renglón del detalle opcional de lo que consumió una persona (ej: "Hamburguesa $3.000"). */
+export interface ExpenseItem {
+  id: string;
+  description: string;
+  amount: Cents;
+}
+
 export interface ExpenseParticipant {
   memberId: string;
   /** Lo que le corresponde pagar a esta persona, en centavos. */
   amount: Cents;
   /** true si el monto fue escrito a mano y debe respetarse en los recálculos. */
   isCustom: boolean;
+  /**
+   * Detalle opcional. Si tiene ítems, `amount` es su suma y el monto queda
+   * personalizado (isCustom = true).
+   */
+  items?: ExpenseItem[];
 }
 
 export interface Expense {

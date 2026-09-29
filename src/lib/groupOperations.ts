@@ -24,7 +24,12 @@ export function createGroup(draft: GroupDraft): Group {
   };
 }
 
+/**
+ * Las operaciones que agregan cosas reciben el id ya generado: con Firestore
+ * una transacción se puede reintentar, y así aplicarla dos veces no duplica nada.
+ */
 export function addMember(group: Group, name: string, id: string = createId()): Group {
+  if (group.members.some((m) => m.id === id)) return group;
   const member: Member = { id, name: name.trim() };
   return { ...group, members: [...group.members, member] };
 }
@@ -81,8 +86,14 @@ export function removeMember(group: Group, memberId: string): Group {
   return { ...group, members: group.members.filter((m) => m.id !== memberId), expenses };
 }
 
-export function addExpense(group: Group, draft: ExpenseDraft): Group {
-  const expense: Expense = { ...draft, id: createId(), date: new Date().toISOString() };
+export function addExpense(
+  group: Group,
+  draft: ExpenseDraft,
+  id: string = createId(),
+  date: string = new Date().toISOString(),
+): Group {
+  if (group.expenses.some((e) => e.id === id)) return updateExpense(group, id, draft);
+  const expense: Expense = { ...draft, id, date };
   return { ...group, expenses: [...group.expenses, expense] };
 }
 

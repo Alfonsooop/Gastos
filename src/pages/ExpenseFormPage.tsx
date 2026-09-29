@@ -11,6 +11,7 @@ import { useExpenseForm } from '../state/useExpenseForm';
 import { navigate, paths } from '../state/router';
 import { addExpense, updateExpense } from '../lib/groupOperations';
 import { hasErrors } from '../lib/validation';
+import { createId } from '../lib/id';
 import { NotFoundPage } from './NotFoundPage';
 import { GroupGate } from '../components/GroupGate';
 
@@ -42,8 +43,13 @@ function ExpenseForm({ group, expense }: { group: Group; expense?: Expense }) {
     setSubmitted(true);
     if (hasErrors(errors) || saving) return;
     const draft = form.toDraft();
+    // El id se genera acá, fuera de la transacción, para que un reintento no duplique el gasto.
+    const newId = createId();
+    const date = new Date().toISOString();
     setSaving(true);
-    const ok = await updateGroup(group.id, (g) => (expense ? updateExpense(g, expense.id, draft) : addExpense(g, draft)));
+    const ok = await updateGroup(group.id, (g) =>
+      expense ? updateExpense(g, expense.id, draft) : addExpense(g, draft, newId, date),
+    );
     setSaving(false);
     if (ok) navigate(expense ? paths.expense(group.id, expense.id) : paths.group(group.id, 'gastos'), { replace: true });
   };
@@ -126,6 +132,7 @@ function ExpenseForm({ group, expense }: { group: Group; expense?: Expense }) {
             onToggle={form.toggleParticipant}
             onAmountChange={form.setCustomAmount}
             onUnlock={form.unlockAmount}
+            onItemsChange={form.setItems}
           />
           <FieldError>{showError('participants')}</FieldError>
 
