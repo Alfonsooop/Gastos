@@ -8,6 +8,7 @@ export type Route =
   | { name: 'home' }
   | { name: 'groups' }
   | { name: 'new-group' }
+  | { name: 'join'; code: string }
   | { name: 'group'; groupId: string; tab: GroupTab }
   | { name: 'new-expense'; groupId: string }
   | { name: 'expense'; groupId: string; expenseId: string }
@@ -21,6 +22,7 @@ export function parseRoute(hash: string): Route {
   const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent);
   const [a, b, c, d, e] = parts;
   if (!a) return { name: 'home' };
+  if (a === 'unirse' && !c) return { name: 'join', code: b ?? '' };
   if (a !== 'grupos') return { name: 'not-found' };
   if (!b) return { name: 'groups' };
   if (b === 'nuevo' && !c) return { name: 'new-group' };
@@ -36,6 +38,7 @@ export const paths = {
   home: () => '#/',
   groups: () => '#/grupos',
   newGroup: () => '#/grupos/nuevo',
+  join: (code = '') => (code ? `#/unirse/${code}` : '#/unirse'),
   group: (groupId: string, tab: GroupTab = 'resumen') =>
     tab === 'resumen' ? `#/grupos/${groupId}` : `#/grupos/${groupId}/${tab}`,
   newExpense: (groupId: string) => `#/grupos/${groupId}/gastos/nuevo`,

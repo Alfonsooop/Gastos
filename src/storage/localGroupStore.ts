@@ -1,6 +1,7 @@
 import type { Group } from '../types';
 import type { GroupStore } from './GroupStore';
 import { loadGroups, saveGroups } from './groupsStorage';
+import { generateGroupCode } from '../lib/groupCode';
 
 type Listener = (group: Group | null) => void;
 
@@ -19,7 +20,7 @@ export function createLocalGroupStore(storage: Storage | undefined = globalThis.
     });
   }
 
-  return {
+  const store: GroupStore = {
     mode: 'local',
     watch(id, onChange) {
       const set = listeners.get(id) ?? new Set<Listener>();
@@ -45,5 +46,19 @@ export function createLocalGroupStore(storage: Storage | undefined = globalThis.
       persist();
       emit(id);
     },
+    async ensureCode(groupId) {
+      const group = groups.get(groupId);
+      if (!group) throw new Error('Este grupo ya no existe.');
+      if (group.code) return group.code;
+      const used = new Set([...groups.values()].map((g) => g.code));
+      let code = generateGroupCode();
+      while (used.has(code)) code = generateGroupCode();
+      await store.update(groupId, (g) => ({ ...g, code }));
+      return code;
+    },
+    async findGroupIdByCode(code) {
+      return [...groups.values()].find((g) => g.code === code)?.id ?? null;
+    },
   };
+  return store;
 }

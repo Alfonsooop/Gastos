@@ -32,6 +32,8 @@ export interface Group {
   members: Member[];
   expenses: Expense[];
   createdAt: string;
+  /** Código corto para que otros se unan (ej: "K7P2QX"). Se asigna al invitar. */
+  code?: string;
 }
 
 export interface MemberBalance {

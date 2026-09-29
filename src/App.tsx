@@ -6,6 +6,7 @@ import { GroupPage } from './pages/GroupPage';
 import { ExpenseFormPage } from './pages/ExpenseFormPage';
 import { ExpenseDetailPage } from './pages/ExpenseDetailPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { JoinPage } from './pages/JoinPage';
 
 export default function App() {
   const route = useRoute();
@@ -17,6 +18,8 @@ export default function App() {
       return <GroupsPage />;
     case 'new-group':
       return <NewGroupPage />;
+    case 'join':
+      return <JoinPage key={route.code} initialCode={route.code} />;
     case 'group':
       return <GroupPage groupId={route.groupId} tab={route.tab} />;
     case 'new-expense':

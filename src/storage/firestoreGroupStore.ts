@@ -3,6 +3,7 @@ import {
   connectFirestoreEmulator,
   deleteDoc,
   doc,
+  getDoc,
   initializeFirestore,
   onSnapshot,
   persistentLocalCache,
@@ -13,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import type { Group } from '../types';
 import type { GroupStore } from './GroupStore';
+import { generateGroupCode } from '../lib/groupCode';
 
 /**
  * GroupStore sobre Firestore: un documento por grupo en la colección `groups`.
@@ -37,6 +39,8 @@ export function createFirestoreGroupStore(config: FirebaseOptions, emulatorHost?
     connectFirestoreEmulator(db, host, Number(port));
   }
   const groupRef = (id: string) => doc(db, 'groups', id);
+  /** codes/{código} → { groupId }: permite unirse escribiendo el código. */
+  const codeRef = (code: string) => doc(db, 'codes', code);
 
   return {
     mode: 'cloud',
@@ -64,6 +68,28 @@ export function createFirestoreGroupStore(config: FirebaseOptions, emulatorHost?
     },
     async remove(id) {
       deleteDoc(groupRef(id)).catch((e) => console.error(e));
+    },
+    async ensureCode(groupId) {
+      // Transacción: si dos personas tocan "Invitar" a la vez, queda un solo código.
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const candidate = generateGroupCode();
+        const code = await runTransaction(db, async (tx) => {
+          const snap = await tx.get(groupRef(groupId));
+          if (!snap.exists()) throw new Error('Este grupo ya no existe.');
+          const existing = (snap.data() as Group).code;
+          if (existing) return existing;
+          if ((await tx.get(codeRef(candidate))).exists()) return null; // código ocupado: probar otro
+          tx.set(codeRef(candidate), { groupId });
+          tx.update(groupRef(groupId), { code: candidate });
+          return candidate;
+        });
+        if (code) return code;
+      }
+      throw new Error('No se pudo generar el código. Probá de nuevo.');
+    },
+    async findGroupIdByCode(code) {
+      const snap = await getDoc(codeRef(code));
+      return snap.exists() ? (snap.data() as { groupId: string }).groupId : null;
     },
   };
 }

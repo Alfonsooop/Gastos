@@ -1,7 +1,8 @@
 rules_version = '2';
 
 // Acceso "con el link": quien conoce el id de un grupo (un UUID imposible de
-// adivinar) puede verlo y editarlo. Nadie puede listar los grupos de otros.
+// adivinar) o su código corto puede verlo y editarlo. Nadie puede listar los
+// grupos de otros.
 service cloud.firestore {
   match /databases/{database}/documents {
     match /groups/{groupId} {
@@ -17,8 +18,22 @@ service cloud.firestore {
       allow get: if true;
       allow list: if false;
       allow create: if isValidGroup(request.resource.data);
-      allow update: if isValidGroup(request.resource.data) && request.resource.data.createdAt == resource.data.createdAt;
+      allow update: if isValidGroup(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt
+        // El código, una vez asignado, no cambia.
+        && (!('code' in resource.data) || request.resource.data.code == resource.data.code);
       allow delete: if true;
+    }
+
+    // Código corto → id del grupo, para unirse escribiendo el código.
+    match /codes/{code} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if code.matches('^[A-HJ-NP-Z2-9]{6}$')
+        && request.resource.data.keys().hasOnly(['groupId'])
+        && request.resource.data.groupId is string
+        && exists(/databases/$(database)/documents/groups/$(request.resource.data.groupId));
+      allow update, delete: if false;
     }
   }
 }

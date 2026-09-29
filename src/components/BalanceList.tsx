@@ -12,7 +12,7 @@ function balanceStatus(balance: number) {
  * Tabla de resumen. En pantallas chicas cada fila se apila (nombre + balance
  * arriba, pagó / le corresponde abajo); desde `sm` se ve como tabla clásica.
  */
-export function BalanceList({ members, balances }: { members: Member[]; balances: MemberBalance[] }) {
+export function BalanceList({ members, balances, meId }: { members: Member[]; balances: MemberBalance[]; meId?: string }) {
   const nameOf = new Map(members.map((m) => [m.id, m.name]));
   return (
     <div className="overflow-hidden rounded-3xl bg-card ring-1 ring-line">
@@ -34,6 +34,9 @@ export function BalanceList({ members, balances }: { members: Member[]; balances
               <span className="flex min-w-0 items-center gap-2.5">
                 <Avatar name={name} size="sm" />
                 <span className="truncate font-semibold">{name}</span>
+                {b.memberId === meId && (
+                  <span className="shrink-0 rounded-full bg-lime px-1.5 py-0.5 text-[10px] font-bold uppercase">vos</span>
+                )}
               </span>
               <span className="order-3 text-sm text-muted sm:order-none sm:text-right sm:text-[15px] sm:text-ink">
                 <span className="sm:hidden">Pagó </span>
