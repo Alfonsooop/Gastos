@@ -3,6 +3,7 @@ import type { Group, Member, MemberBalance } from '../types';
 import { useGroups } from '../state/GroupsContext';
 import { addMember, getMemberUsage, removeMember } from '../lib/groupOperations';
 import { validateMemberName } from '../lib/validation';
+import { createId } from '../lib/id';
 import { formatSignedMoney } from '../lib/money';
 import { Avatar } from './Avatar';
 import { Button } from './Button';
@@ -27,7 +28,8 @@ export function MembersPanel({ group, balances }: { group: Group; balances: Memb
     if (problem) return;
     const newName = name;
     setName('');
-    if (!(await updateGroup(group.id, (g) => addMember(g, newName)))) setName(newName);
+    const id = createId(); // fuera de la transacción: un reintento no duplica a la persona
+    if (!(await updateGroup(group.id, (g) => addMember(g, newName, id)))) setName(newName);
   };
 
   return (

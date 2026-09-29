@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addExpense, createGroup, deleteExpense, getMemberUsage, removeMember, updateExpense } from './groupOperations';
+import { addExpense, addMember, createGroup, deleteExpense, getMemberUsage, removeMember, updateExpense } from './groupOperations';
 import { calculateExpenseDistribution, resetToEqualSplit } from './distribution';
 import { calculateBalances } from './balances';
 import { pesos } from './money';
@@ -87,5 +87,33 @@ describe('validation', () => {
     expect(
       validateExpense({ ...base, participants: [{ memberId: 'a', amount: pesos(100), isCustom: false }] }),
     ).toEqual({});
+  });
+});
+
+describe('reintentos de transacciones', () => {
+  it('aplicar dos veces el alta de un gasto no lo duplica', () => {
+    const { group, a } = setup();
+    const draft = { description: 'Taxi', totalAmount: pesos(900), paidBy: a, participants: resetToEqualSplit(pesos(900), [a]) };
+    const addTaxi = (g: typeof group) => addExpense(g, draft, 'taxi-1', '2026-09-29T00:00:00.000Z');
+    const once = addTaxi(group);
+    const twice = addTaxi(addTaxi(group));
+    expect(twice).toEqual(once);
+    expect(twice.expenses.filter((e) => e.description === 'Taxi')).toHaveLength(1);
+  });
+
+  it('aplicar dos veces una edición da lo mismo que una', () => {
+    const { group, j } = setup();
+    const id = group.expenses[0]!.id;
+    const draft = { ...group.expenses[0]!, description: 'Cena del viernes' };
+    const edit = (g: typeof group) => updateExpense(g, id, draft);
+    expect(edit(edit(group))).toEqual(edit(group));
+    expect(edit(group).expenses).toHaveLength(1);
+    void j;
+  });
+
+  it('aplicar dos veces el alta de una persona no la duplica', () => {
+    const { group } = setup();
+    const withSofi = addMember(addMember(group, 'Sofía', 'sofi'), 'Sofía', 'sofi');
+    expect(withSofi.members.filter((m) => m.name === 'Sofía')).toHaveLength(1);
   });
 });
