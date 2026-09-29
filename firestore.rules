@@ -1,0 +1,24 @@
+rules_version = '2';
+
+// Acceso "con el link": quien conoce el id de un grupo (un UUID imposible de
+// adivinar) puede verlo y editarlo. Nadie puede listar los grupos de otros.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /groups/{groupId} {
+      function isValidGroup(g) {
+        return g.keys().hasAll(['id', 'name', 'description', 'members', 'expenses', 'createdAt'])
+          && g.id == groupId
+          && g.name is string && g.name.size() > 0 && g.name.size() <= 100
+          && g.description is string && g.description.size() <= 200
+          && g.members is list && g.members.size() <= 50
+          && g.expenses is list && g.expenses.size() <= 1000;
+      }
+
+      allow get: if true;
+      allow list: if false;
+      allow create: if isValidGroup(request.resource.data);
+      allow update: if isValidGroup(request.resource.data) && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if true;
+    }
+  }
+}
