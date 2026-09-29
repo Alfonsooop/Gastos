@@ -15,6 +15,10 @@ import { WhoAreYouDialog } from '../components/WhoAreYouDialog';
 import { PersonalCard } from '../components/PersonalCard';
 import { useMyMemberId } from '../state/useMyMemberId';
 import { getPersonalSummary } from '../lib/personalSummary';
+import { InstallBanner } from '../components/InstallBanner';
+import { detectPlatform } from '../lib/platform';
+
+const isPhone = detectPlatform(navigator.userAgent, navigator.maxTouchPoints).platform !== 'desktop';
 import { paths, type GroupTab } from '../state/router';
 import { calculateBalances, calculateGroupTotal, calculateSettlements } from '../lib/balances';
 import { formatMoney } from '../lib/money';
@@ -88,6 +92,7 @@ function GroupView({ group, tab }: { group: Group; tab: GroupTab }) {
       <div className="mt-4 animate-rise" key={tab}>
         {tab === 'resumen' && (
           <div className="space-y-8">
+            {isPhone && <InstallBanner compact />}
             {shared && group.expenses.length > 0 && (
               me ? (
                 <PersonalCard

@@ -22,6 +22,7 @@ En un grupo, distintas personas pagan distintas cosas (el bar, el cine, el taxi)
 - **¿Quién sos?**: al entrar a un grupo compartido cada uno elige su nombre (o se agrega) y ve arriba de todo cuánto tiene que transferir y a quién. Las ediciones usan transacciones, así dos personas guardando a la vez no se pisan.
 - **Sin configurar Firebase** la app funciona igual, guardando todo en el navegador (`localStorage`). Al activar la nube, los grupos locales se suben solos.
 - **Grupo de ejemplo** cargable desde la Home para probar la app en un clic.
+- **Acceso directo en el celular**: mini tutorial con los pasos para iPhone o Android (se detecta solo) y botón **Instalar** en un toque cuando Chrome lo permite. Con el `manifest.webmanifest` y los íconos, se abre a pantalla completa como una app.
 - Diseño mobile-first, pensado para usar desde el teléfono en plena juntada.
 
 ## Stack
