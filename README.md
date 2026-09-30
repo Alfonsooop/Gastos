@@ -17,6 +17,7 @@ En un grupo, distintas personas pagan distintas cosas (el bar, el cine, el taxi)
 - **Montos personalizados tipo planilla**: tocás un monto, lo escribís, queda fijado (🔒) y el resto se reparte solo. Tocando 🔒 vuelve a automático. Botón **Restablecer división equitativa**.
 - **Detalle opcional por persona**: con la flecha ▸ se anota qué consumió cada uno (ej. Hamburguesa $3.000 + Cerveza $2.000); su parte pasa a ser la suma y el resto se reparte solo. En el detalle del gasto se despliega con la misma flecha.
 - **Indicador de asignación** siempre visible (`Asignado: $60.000,00 / $60.000,00 ✓`) con avisos de faltantes o excesos. No se puede guardar hasta que cuadre.
+- **Pagos entre integrantes**: quien debe toca **Ya pagué** y queda un aviso; quien cobra lo **Confirma** (o **No lo recibí**), o registra directo **Recibí el pago** (también pagos parciales). Los pagos confirmados se descuentan de los balances y la liquidación se recalcula; hay historial para deshacer un pago cargado por error. Sin identidad o en modo local, cada transferencia tiene **Marcar como pagado**.
 - **Resumen**: pagó / le corresponde / balance por persona, con colores.
 - **Liquidación**: las transferencias para dejar a todos en $0, con botón para copiar el texto y mandarlo al grupo.
 - **Grupos compartidos en la nube** (Firebase Firestore): tocás **Invitar** y compartís el **código del grupo** (ej. `K7P2QX`) o el link. Tus amigos entran con **Unirme con un código** y todos ven y cargan gastos en el mismo grupo, sincronizado en vivo.

@@ -32,6 +32,8 @@ function expectAllSettled(balances: MemberBalance[]) {
 }
 
 const b = (memberId: string, balancePesos: number): MemberBalance => ({
+  sent: 0,
+  received: 0,
   memberId,
   paid: 0,
   owed: 0,
@@ -58,9 +60,9 @@ describe('caso completo: bar, cine y taxi', () => {
   });
 
   it('calcula pagado, le corresponde y balance', () => {
-    expect(result.alfonso).toEqual({ memberId: 'alfonso', paid: pesos(30000), owed: pesos(19666.67), balance: pesos(10333.33) });
-    expect(result.juan).toEqual({ memberId: 'juan', paid: pesos(20000), owed: pesos(19666.67), balance: pesos(333.33) });
-    expect(result.pedro).toEqual({ memberId: 'pedro', paid: pesos(9000), owed: pesos(19666.66), balance: pesos(-10666.66) });
+    expect(result.alfonso).toMatchObject({ memberId: 'alfonso', paid: pesos(30000), owed: pesos(19666.67), balance: pesos(10333.33) });
+    expect(result.juan).toMatchObject({ memberId: 'juan', paid: pesos(20000), owed: pesos(19666.67), balance: pesos(333.33) });
+    expect(result.pedro).toMatchObject({ memberId: 'pedro', paid: pesos(9000), owed: pesos(19666.66), balance: pesos(-10666.66) });
   });
 
   it('la suma de balances es 0', () => {
@@ -166,7 +168,7 @@ describe('calculateSettlements', () => {
       const n = 2 + Math.floor(rand() * 8);
       const values = Array.from({ length: n - 1 }, () => Math.round((rand() - 0.5) * 2_000_000));
       values.push(-values.reduce((s, v) => s + v, 0));
-      const balances = values.map((balance, i) => ({ memberId: `m${i}`, paid: 0, owed: 0, balance }));
+      const balances = values.map((balance, i) => ({ memberId: `m${i}`, paid: 0, owed: 0, sent: 0, received: 0, balance }));
       const settlements = calculateSettlements(balances);
       expect(settlements.length).toBeLessThanOrEqual(n - 1);
       expect(settlements.every((s) => s.amount > 0)).toBe(true);

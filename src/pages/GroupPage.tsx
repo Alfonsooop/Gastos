@@ -1,5 +1,7 @@
-import { useMemo, useState } from 'react';
-import type { Group } from '../types';
+import { useMemo, useState, type ReactNode } from 'react';
+import type { Group, Settlement } from '../types';
+import { SettlementActions } from '../components/SettlementActions';
+import { PaymentHistory } from '../components/PaymentHistory';
 import { Page } from '../components/Layout';
 import { Button, LinkButton } from '../components/Button';
 import { SectionTitle } from '../components/Card';
@@ -35,7 +37,7 @@ export function GroupPage({ groupId, tab }: { groupId: string; tab: GroupTab }) 
 }
 
 function GroupView({ group, tab }: { group: Group; tab: GroupTab }) {
-  const balances = useMemo(() => calculateBalances(group.members, group.expenses), [group]);
+  const balances = useMemo(() => calculateBalances(group.members, group.expenses, group.payments), [group]);
   const settlements = useMemo(() => calculateSettlements(balances), [balances]);
   const total = calculateGroupTotal(group.expenses);
   const { mode } = useGroups();
@@ -45,6 +47,12 @@ function GroupView({ group, tab }: { group: Group; tab: GroupTab }) {
   const me = group.members.find((m) => m.id === identity.memberId);
   // En grupos compartidos, preguntamos una vez "¿quién sos?" al entrar.
   const showWhoAreYou = shared && (choosingIdentity || !identity.asked);
+
+  // Sin identidad (modo local o eligió "Ahora no"), cualquiera puede marcar un pago.
+  const anonymous = !shared || !me;
+  const renderActions = (s: Settlement, dark = false) => (
+    <SettlementActions group={group} settlement={s} meId={me?.id} anonymous={anonymous} dark={dark} />
+  );
 
   const chooseIdentity = (memberId: string) => {
     identity.setMemberId(memberId);
@@ -100,6 +108,7 @@ function GroupView({ group, tab }: { group: Group; tab: GroupTab }) {
                   members={group.members}
                   summary={getPersonalSummary(me.id, balances, settlements)}
                   onChange={() => setChoosingIdentity(true)}
+                  renderActions={(s) => renderActions(s, true)}
                 />
               ) : (
                 <button
@@ -136,13 +145,18 @@ function GroupView({ group, tab }: { group: Group; tab: GroupTab }) {
                 <>
                   <BalanceList members={group.members} balances={balances} meId={me?.id} />
                   <p className="mt-2 px-1 text-xs text-muted">
-                    Balance = lo que pagó − lo que le corresponde. Positivo: recibe dinero. Negativo: tiene que pagar.
+                    Balance = lo que pagó − lo que le corresponde, contando los pagos ya confirmados. Positivo: recibe dinero. Negativo: tiene que pagar.
                   </p>
                 </>
               )}
             </section>
             {group.expenses.length > 0 && (
-              <SettlementSection group={group} settlements={settlements} />
+              <SettlementSection
+                group={group}
+                settlements={settlements}
+                // En Resumen, quien eligió quién es ya tiene los botones en su tarjeta personal.
+                renderActions={anonymous ? renderActions : undefined}
+              />
             )}
           </div>
         )}
@@ -153,7 +167,12 @@ function GroupView({ group, tab }: { group: Group; tab: GroupTab }) {
           </section>
         )}
         {tab === 'integrantes' && <MembersPanel group={group} balances={balances} />}
-        {tab === 'liquidacion' && <SettlementSection group={group} settlements={settlements} showShare />}
+        {tab === 'liquidacion' && (
+          <div className="space-y-8">
+            <SettlementSection group={group} settlements={settlements} renderActions={renderActions} showShare />
+            <PaymentHistory group={group} />
+          </div>
+        )}
       </div>
 
       {showWhoAreYou && (
@@ -182,12 +201,18 @@ function Stat({ label, value, highlight = false, className = '' }: { label: stri
 function SettlementSection({
   group,
   settlements,
+  renderActions,
   showShare = false,
 }: {
   group: Group;
   settlements: ReturnType<typeof calculateSettlements>;
+  renderActions?: (s: Settlement) => ReactNode;
   showShare?: boolean;
 }) {
+  // Avisos de pago que ya no coinciden con ninguna transferencia (ej: cambiaron los gastos).
+  const orphanPending = (group.payments ?? []).filter(
+    (p) => p.status === 'pending' && !settlements.some((s) => s.from === p.from && s.to === p.to),
+  );
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -220,12 +245,22 @@ function SettlementSection({
         <EmptyState icon="🎉" title="¡Todo está saldado! 🎉" text="Nadie le debe nada a nadie." />
       ) : (
         <>
-          <SettlementList members={group.members} settlements={settlements} />
+          <SettlementList members={group.members} settlements={settlements} renderActions={renderActions} />
           <p className="mt-3 px-1 text-xs text-muted">
             {settlements.length === 1 ? 'Con esta transferencia' : `Con estas ${settlements.length} transferencias`} todos quedan
             en $0,00.
           </p>
         </>
+      )}
+      {orphanPending.length > 0 && (
+        <div className="mt-4 space-y-2">
+          <p className="px-1 text-sm font-semibold">Avisos de pago por revisar</p>
+          <SettlementList
+            members={group.members}
+            settlements={orphanPending.map((p) => ({ from: p.from, to: p.to, amount: p.amount }))}
+            renderActions={renderActions}
+          />
+        </div>
       )}
     </section>
   );

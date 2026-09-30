@@ -30,7 +30,7 @@ describe('groupOperations', () => {
 
   it('quitar un participante redistribuye su parte y el gasto sigue cuadrando', () => {
     const { group, j, p } = setup();
-    expect(getMemberUsage(group, j)).toEqual({ paidCount: 0, participatesCount: 1, soleParticipantCount: 0 });
+    expect(getMemberUsage(group, j)).toEqual({ paidCount: 0, participatesCount: 1, soleParticipantCount: 0, paymentsCount: 0 });
     const updated = removeMember(group, j);
     const expense = updated.expenses[0]!;
     expect(expense.participants.map((x) => x.amount)).toEqual([pesos(30000), pesos(30000)]);
