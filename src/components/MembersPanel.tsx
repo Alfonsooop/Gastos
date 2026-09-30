@@ -19,7 +19,7 @@ export function MembersPanel({ group, balances }: { group: Group; balances: Memb
 
   const balanceOf = new Map(balances.map((b) => [b.memberId, b.balance]));
   const usage = toRemove ? getMemberUsage(group, toRemove.id) : null;
-  const blocked = Boolean(usage && usage.paidCount > 0);
+  const blocked = Boolean(usage && (usage.paidCount > 0 || usage.paymentsCount > 0));
 
   const onAdd = async (e: FormEvent) => {
     e.preventDefault();
@@ -95,10 +95,16 @@ export function MembersPanel({ group, balances }: { group: Group; balances: Memb
           setToRemove(null);
         }}
       >
-        {usage && blocked && (
+        {usage && blocked && usage.paidCount > 0 && (
           <p>
             {toRemove?.name} pagó {usage.paidCount === 1 ? '1 gasto' : `${usage.paidCount} gastos`}. Cambiá quién pagó o
             eliminá esos gastos antes de quitar a esta persona, así no se pierde ese dinero en las cuentas.
+          </p>
+        )}
+        {usage && blocked && usage.paidCount === 0 && (
+          <p>
+            {toRemove?.name} tiene {usage.paymentsCount === 1 ? '1 pago registrado' : `${usage.paymentsCount} pagos registrados`}.
+            Borralos desde Liquidación → Pagos antes de quitar a esta persona.
           </p>
         )}
         {usage && !blocked && usage.participatesCount > 0 && (

@@ -1,4 +1,5 @@
-import type { Member } from '../types';
+import type { ReactNode } from 'react';
+import type { Member, Settlement } from '../types';
 import type { PersonalSummary } from '../lib/personalSummary';
 import { formatMoney } from '../lib/money';
 import { Avatar } from './Avatar';
@@ -8,10 +9,12 @@ interface PersonalCardProps {
   members: Member[];
   summary: PersonalSummary;
   onChange: () => void;
+  /** Botones de pago de cada transferencia ("Ya pagué", "Recibí el pago"...). */
+  renderActions?: (settlement: Settlement) => ReactNode;
 }
 
 /** Lo primero que ve cada uno: cuánto tiene que pagar o recibir, y de quién. */
-export function PersonalCard({ me, members, summary, onChange }: PersonalCardProps) {
+export function PersonalCard({ me, members, summary, onChange, renderActions }: PersonalCardProps) {
   const nameOf = new Map(members.map((m) => [m.id, m.name]));
   const { balance, toPay, toReceive } = summary;
 
@@ -39,12 +42,15 @@ export function PersonalCard({ me, members, summary, onChange }: PersonalCardPro
             {(balance < 0 ? toPay : toReceive).map((s) => {
               const other = nameOf.get(balance < 0 ? s.to : s.from) ?? '—';
               return (
-                <li key={`${s.from}-${s.to}`} className="flex items-center justify-between gap-3 rounded-xl bg-white/10 px-3 py-2 text-sm">
-                  <span>
-                    {balance < 0 ? 'A ' : 'De '}
-                    <strong>{other}</strong>
-                  </span>
-                  <span className="tabular font-bold">{formatMoney(s.amount)}</span>
+                <li key={`${s.from}-${s.to}`} className="rounded-xl bg-white/10 px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <span>
+                      {balance < 0 ? 'A ' : 'De '}
+                      <strong>{other}</strong>
+                    </span>
+                    <span className="tabular font-bold">{formatMoney(s.amount)}</span>
+                  </div>
+                  {renderActions && <div className="empty:hidden mt-2">{renderActions(s)}</div>}
                 </li>
               );
             })}

@@ -1,4 +1,4 @@
-import type { Cents, Expense, Member, MemberBalance, Settlement } from '../types';
+import type { Cents, Expense, Member, MemberBalance, Payment, Settlement } from '../types';
 
 export function calculateGroupTotal(expenses: Expense[]): Cents {
   return expenses.reduce((sum, e) => sum + e.totalAmount, 0);
@@ -6,11 +6,20 @@ export function calculateGroupTotal(expenses: Expense[]): Cents {
 
 /**
  * Para cada integrante: cuánto pagó, cuánto le correspondía y su balance
- * (pagado - le corresponde). La suma de todos los balances es siempre 0.
+ * (pagado - le corresponde). Los pagos confirmados entre integrantes también
+ * cuentan: quien transfirió debe menos y quien cobró tiene menos por recibir.
+ * La suma de todos los balances es siempre 0.
  */
-export function calculateBalances(members: Member[], expenses: Expense[]): MemberBalance[] {
+export function calculateBalances(members: Member[], expenses: Expense[], payments: Payment[] = []): MemberBalance[] {
   const paid = new Map<string, Cents>();
   const owed = new Map<string, Cents>();
+  const sent = new Map<string, Cents>();
+  const received = new Map<string, Cents>();
+  for (const p of payments) {
+    if (p.status !== 'confirmed') continue;
+    sent.set(p.from, (sent.get(p.from) ?? 0) + p.amount);
+    received.set(p.to, (received.get(p.to) ?? 0) + p.amount);
+  }
 
   for (const expense of expenses) {
     paid.set(expense.paidBy, (paid.get(expense.paidBy) ?? 0) + expense.totalAmount);
@@ -22,7 +31,16 @@ export function calculateBalances(members: Member[], expenses: Expense[]): Membe
   return members.map((m) => {
     const memberPaid = paid.get(m.id) ?? 0;
     const memberOwed = owed.get(m.id) ?? 0;
-    return { memberId: m.id, paid: memberPaid, owed: memberOwed, balance: memberPaid - memberOwed };
+    const memberSent = sent.get(m.id) ?? 0;
+    const memberReceived = received.get(m.id) ?? 0;
+    return {
+      memberId: m.id,
+      paid: memberPaid,
+      owed: memberOwed,
+      sent: memberSent,
+      received: memberReceived,
+      balance: memberPaid - memberOwed + memberSent - memberReceived,
+    };
   });
 }
 

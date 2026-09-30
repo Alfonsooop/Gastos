@@ -39,6 +39,8 @@ export interface MemberUsage {
   participatesCount: number;
   /** Gastos donde es el único participante (se eliminarían al quitarlo). */
   soleParticipantCount: number;
+  /** Pagos (avisados o confirmados) que hizo o recibió. */
+  paymentsCount: number;
 }
 
 export function getMemberUsage(group: Group, memberId: string): MemberUsage {
@@ -52,7 +54,8 @@ export function getMemberUsage(group: Group, memberId: string): MemberUsage {
       if (e.participants.length === 1) soleParticipantCount++;
     }
   }
-  return { paidCount, participatesCount, soleParticipantCount };
+  const paymentsCount = (group.payments ?? []).filter((p) => p.from === memberId || p.to === memberId).length;
+  return { paidCount, participatesCount, soleParticipantCount, paymentsCount };
 }
 
 /**
@@ -79,6 +82,9 @@ function removeParticipant(expense: Expense, memberId: string): Expense | null {
 export function removeMember(group: Group, memberId: string): Group {
   if (group.expenses.some((e) => e.paidBy === memberId)) {
     throw new Error('No se puede eliminar a alguien que pagó gastos del grupo.');
+  }
+  if ((group.payments ?? []).some((p) => p.from === memberId || p.to === memberId)) {
+    throw new Error('No se puede eliminar a alguien con pagos registrados.');
   }
   const expenses = group.expenses
     .map((e) => removeParticipant(e, memberId))

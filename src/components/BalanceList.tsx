@@ -33,18 +33,30 @@ export function BalanceList({ members, balances, meId }: { members: Member[]; ba
             >
               <span className="flex min-w-0 items-center gap-2.5">
                 <Avatar name={name} size="sm" />
-                <span className="truncate font-semibold">{name}</span>
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold">{name}</span>
+                  {(b.sent > 0 || b.received > 0) && (
+                    <span className="block truncate text-xs text-muted">
+                      {b.sent > 0 && `Transfirió ${formatMoney(b.sent)}`}
+                      {b.sent > 0 && b.received > 0 && ' · '}
+                      {b.received > 0 && `Recibió ${formatMoney(b.received)}`}
+                    </span>
+                  )}
+                </span>
                 {b.memberId === meId && (
                   <span className="shrink-0 rounded-full bg-lime px-1.5 py-0.5 text-[10px] font-bold uppercase">vos</span>
                 )}
               </span>
-              <span className="order-3 text-sm text-muted sm:order-none sm:text-right sm:text-[15px] sm:text-ink">
-                <span className="sm:hidden">Pagó </span>
-                <span className="tabular">{formatMoney(b.paid)}</span>
-              </span>
-              <span className="order-4 text-right text-sm text-muted sm:order-none sm:text-[15px] sm:text-ink">
-                <span className="sm:hidden">Le corresponde </span>
-                <span className="tabular">{formatMoney(b.owed)}</span>
+              {/* En celular, "Pagó" y "Le corresponde" van en una línea a lo ancho; desde sm son columnas. */}
+              <span className="order-3 col-span-2 flex justify-between gap-3 sm:contents">
+                <span className="text-sm text-muted sm:text-right sm:text-[15px] sm:text-ink">
+                  <span className="sm:hidden">Pagó </span>
+                  <span className="tabular">{formatMoney(b.paid)}</span>
+                </span>
+                <span className="text-right text-sm text-muted sm:text-[15px] sm:text-ink">
+                  <span className="sm:hidden">Le corresponde </span>
+                  <span className="tabular">{formatMoney(b.owed)}</span>
+                </span>
               </span>
               <span className="order-2 flex flex-col items-end sm:order-none">
                 <span className={`tabular font-bold ${status.amountClass}`}>{formatSignedMoney(b.balance)}</span>
